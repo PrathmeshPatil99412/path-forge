@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PathForge — Shortest Path Visualizer & Algorithm Comparator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-base: #090d16;
+      --bg-surface: #111827;
+      --bg-card: #182234;
+      --bg-card-hover: #223049;
+      --border-color: #2b3952;
+      --border-light: #3b4d6d;
+      
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-subtle: #64748b;
+
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-glow: rgba(99, 102, 241, 0.35);
+
+      --accent-cyan: #06b6d4;
+      --accent-purple: #a855f7;
+      --accent-emerald: #10b981;
+      --accent-rose: #f43f5e;
+      --accent-amber: #f59e0b;
+      
+      --cell-size: 26px;
+      --cell-border: #1e293b;
+      --cell-empty: #0f172a;
+      --cell-wall: #334155;
+      --cell-wall-border: #475569;
+      --cell-start: #10b981;
+      --cell-end: #ef4444;
+      --cell-explored: #06b6d4;
+      --cell-path: #fbbf24;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    header {
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.75rem 1.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, var(--primary), var(--accent-cyan));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.2rem;
+      color: white;
+      box-shadow: 0 0 16px var(--primary-glow);
+    }
+
+    .brand-text h1 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(to right, #ffffff, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-text p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .header-badges {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .tag-badge {
+      font-size: 0.72rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      font-weight: 600;
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: #a5b4fc;
+    }
+
+    /* Toolbar Controls */
+    .toolbar {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.85rem 1.75rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .control-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    select, input[type="range"] {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.5rem 0.85rem;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 500;
+      outline: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    select:hover, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-glow);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #4f46e5);
+      color: white;
+      box-shadow: 0 4px 14px var(--primary-glow);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #4f46e5, #4338ca);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+    }
+
+    .btn-compare {
+      background: linear-gradient(135deg, #9333ea, #7e22ce);
+      color: white;
+      box-shadow: 0 4px 14px rgba(168, 85, 247, 0.3);
+    }
+
+    .btn-compare:hover {
+      background: linear-gradient(135deg, #7e22ce, #6b21a8);
+      box-shadow: 0 6px 20px rgba(168, 85, 247, 0.5);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      border-color: var(--border-color);
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-light);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: rgba(239, 68, 68, 0.25);
+      color: #fca5a5;
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.22);
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    /* Speed Slider */
+    .slider-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 0.35rem 0.75rem;
+      border-radius: 8px;
+    }
+
+    .slider-wrapper input[type="range"] {
+      padding: 0;
+      border: none;
+      background: #334155;
+      height: 6px;
+      border-radius: 3px;
+      width: 85px;
+      accent-color: var(--primary);
+    }
+
+    .speed-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--accent-cyan);
+      min-width: 42px;
+      text-align: right;
+    }
+
+    /* Legend Bar */
+    .legend-bar {
+      padding: 0.6rem 1.75rem;
+      background: #0d1320;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      font-size: 0.8rem;
+    }
+
+    .legend-items {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      color: var(--text-muted);
+    }
+
+    .legend-box {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+    }
+
+    .legend-box.start { background: var(--cell-start); box-shadow: 0 0 6px var(--cell-start); }
+    .legend-box.end { background: var(--cell-end); box-shadow: 0 0 6px var(--cell-end); }
+    .legend-box.wall { background: var(--cell-wall); border-color: var(--cell-wall-border); }
+    .legend-box.explored { background: var(--cell-explored); box-shadow: 0 0 6px rgba(6, 182, 212, 0.4); }
+    .legend-box.path { background: var(--cell-path); box-shadow: 0 0 6px rgba(251, 191, 36, 0.6); }
+
+    .instructions-hint {
+      color: var(--text-subtle);
+      font-size: 0.75rem;
+    }
+
+    /* Main Workspace */
+    .workspace {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .grid-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+      overflow: auto;
+      background: radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.3) 0%, transparent 80%);
+    }
+
+    /* Grid Board */
+    #grid {
+      display: grid;
+      background: #0a0f1d;
+      padding: 6px;
+      border-radius: 12px;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--border-color);
+      gap: 1px;
+    }
+
+    .cell {
+      width: var(--cell-size);
+      height: var(--cell-size);
+      background-color: var(--cell-empty);
+      border-radius: 3px;
+      transition: background-color 0.15s ease, transform 0.12s ease;
+      position: relative;
+      cursor: crosshair;
+    }
+
+    .cell:hover {
+      filter: brightness(1.35);
+    }
+
+    .cell.wall {
+      background-color: var(--cell-wall);
+      border: 1px solid var(--cell-wall-border);
+      animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .cell.start {
+      background-color: var(--cell-start) !important;
+      box-shadow: 0 0 12px var(--cell-start);
+      cursor: grab;
+      border-radius: 6px;
+      animation: pulseStart 2s infinite ease-in-out;
+    }
+
+    .cell.start::after {
+      content: "S";
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #022c22;
+      font-weight: 800;
+      font-size: 0.75rem;
+    }
+
+    .cell.end {
+      background-color: var(--cell-end) !important;
+      box-shadow: 0 0 12px var(--cell-end);
+      cursor: grab;
+      border-radius: 6px;
+      animation: pulseEnd 2s infinite ease-in-out;
+    }
+
+    .cell.end::after {
+      content: "T";
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 0.75rem;
+    }
+
+    /* Cell Animation States */
+    .cell.explored {
+      animation: exploreGlow 0.35s ease-out forwards;
+    }
+
+    .cell.path {
+      animation: pathGlow 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.3); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes pulseStart {
+      0%, 100% { box-shadow: 0 0 10px rgba(16, 185, 129, 0.6); }
+      50% { box-shadow: 0 0 18px rgba(16, 185, 129, 0.95); }
+    }
+
+    @keyframes pulseEnd {
+      0%, 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.6); }
+      50% { box-shadow: 0 0 18px rgba(239, 68, 68, 0.95); }
+    }
+
+    @keyframes exploreGlow {
+      0% {
+        transform: scale(0.3);
+        background-color: rgba(147, 51, 234, 0.9);
+        border-radius: 50%;
+      }
+      50% {
+        background-color: rgba(99, 102, 241, 0.85);
+      }
+      100% {
+        transform: scale(1);
+        background-color: rgba(6, 182, 212, 0.75);
+        border-radius: 3px;
+      }
+    }
+
+    @keyframes pathGlow {
+      0% {
+        transform: scale(0.5);
+        background-color: #f97316;
+        border-radius: 50%;
+      }
+      50% {
+        transform: scale(1.2);
+        background-color: #f59e0b;
+      }
+      100% {
+        transform: scale(1);
+        background-color: #fbbf24;
+        box-shadow: 0 0 10px rgba(251, 191, 36, 0.85);
+        border-radius: 4px;
+      }
+    }
+
+    /* Sidebar / Metrics Panel */
+    .sidebar {
+      width: 330px;
+      background: var(--bg-surface);
+      border-left: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .panel-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-header h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .status-pill {
+      font-size: 0.72rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-weight: 600;
+      background: rgba(100, 116, 139, 0.15);
+      color: var(--text-muted);
+    }
+
+    .status-pill.success {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-pill.failure {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .status-pill.running {
+      background: rgba(99, 102, 241, 0.15);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      animation: pulseRunning 1.2s infinite ease-in-out;
+    }
+
+    @keyframes pulseRunning {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
+    }
+
+    /* Metric Cards */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      padding: 1.25rem;
+    }
+
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      transition: all 0.2s ease;
+    }
+
+    .metric-card:hover {
+      border-color: var(--border-light);
+      background: var(--bg-card-hover);
+    }
+
+    .metric-title {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .metric-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .metric-val.highlight-gold { color: #fbbf24; }
+    .metric-val.highlight-cyan { color: #38bdf8; }
+    .metric-val.highlight-emerald { color: #34d399; }
+    .metric-val.highlight-purple { color: #c084fc; }
+
+    /* Comparison Section */
+    .comparison-section {
+      padding: 1.25rem;
+      border-top: 1px solid var(--border-color);
+      flex: 1;
+    }
+
+    .comparison-section h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.85rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .compare-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 0.4rem;
+      font-size: 0.78rem;
+    }
+
+    .compare-table th {
+      text-align: left;
+      color: var(--text-subtle);
+      font-weight: 600;
+      padding: 0.35rem 0.5rem;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+    }
+
+    .compare-table td {
+      background: var(--bg-card);
+      padding: 0.6rem 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .compare-table tr td:first-child {
+      border-radius: 8px 0 0 8px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .compare-table tr td:last-child {
+      border-radius: 0 8px 8px 0;
+    }
+
+    .badge-optimal {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.68rem;
+    }
+
+    .badge-suboptimal {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.68rem;
+    }
+
+    /* Algorithm Theory Modal / Card */
+    .theory-box {
+      margin: 1.25rem;
+      background: rgba(99, 102, 241, 0.06);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      font-size: 0.78rem;
+      line-height: 1.45;
+    }
+
+    .theory-box h4 {
+      color: #a5b4fc;
+      font-size: 0.85rem;
+      margin-bottom: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .theory-box p {
+      color: var(--text-muted);
+    }
+
+    /* Toast Notification */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      padding: 0.75rem 1.5rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 100;
+    }
+
+    #toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .workspace {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        border-left: none;
+        border-top: 1px solid var(--border-color);
+        max-height: 380px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">⚡</div>
+      <div class="brand-text">
+        <h1>PathForge</h1>
+        <p>Shortest Path Visualizer & Algorithm Comparator</p>
+      </div>
+    </div>
+    <div class="header-badges">
+      <span class="tag-badge">AI Practical Suite</span>
+      <span class="tag-badge">FastAPI + Vanilla JS</span>
+    </div>
+  </header>
+
+  <!-- Interactive Controls Toolbar -->
+  <div class="toolbar">
+    <!-- Algorithm Selection -->
+    <div class="control-group">
+      <span class="control-label">Algorithm</span>
+      <select id="algoSelect">
+        <option value="A*" selected>A* Search (Manhattan Heuristic)</option>
+        <option value="Dijkstra">Dijkstra's Algorithm</option>
+        <option value="BFS">Breadth-First Search (BFS)</option>
+        <option value="DFS">Depth-First Search (DFS)</option>
+      </select>
+    </div>
+
+    <!-- Maze Presets -->
+    <div class="control-group">
+      <span class="control-label">Maze Preset</span>
+      <select id="mazeSelect">
+        <option value="none">Custom / Blank</option>
+        <option value="random">Random Obstacles (30%)</option>
+        <option value="trap">U-Trap Obstacle</option>
+        <option value="corridor">Narrow Corridor</option>
+        <option value="spiral">Spiral Maze</option>
+      </select>
+    </div>
+
+    <!-- Speed Control -->
+    <div class="control-group">
+      <span class="control-label">Speed</span>
+      <div class="slider-wrapper">
+        <input type="range" id="speedSlider" min="1" max="50" value="20" title="Adjust Animation Speed">
+        <span class="speed-badge" id="speedLabel">20ms</span>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="control-group">
+      <button class="btn btn-primary" id="btnRun">
+        <span>▶</span> Run Visualizer
+      </button>
+      <button class="btn btn-compare" id="btnCompare">
+        <span>⚖</span> Compare All 4
+      </button>
+      <button class="btn btn-secondary" id="btnClearPath">
+        Clear Path
+      </button>
+      <button class="btn btn-danger" id="btnClearWalls">
+        Clear Walls
+      </button>
+      <button class="btn btn-secondary" id="btnResetAll">
+        Reset
+      </button>
+    </div>
+  </div>
+
+  <!-- Legend Bar -->
+  <div class="legend-bar">
+    <div class="legend-items">
+      <div class="legend-item"><div class="legend-box start"></div> <span>Start (Drag)</span></div>
+      <div class="legend-item"><div class="legend-box end"></div> <span>Target (Drag)</span></div>
+      <div class="legend-item"><div class="legend-box wall"></div> <span>Wall (Draw)</span></div>
+      <div class="legend-item"><div class="legend-box explored"></div> <span>Explored Node</span></div>
+      <div class="legend-item"><div class="legend-box path"></div> <span>Shortest Path</span></div>
+    </div>
+    <div class="instructions-hint">
+      Tip: Click and drag on cells to draw walls. Drag Start (S) or Target (T) to relocate them.
+    </div>
+  </div>
+
+  <!-- Main Visualizer Area -->
+  <div class="workspace">
+    <div class="grid-container">
+      <div id="grid"></div>
+    </div>
+
+    <!-- Sidebar Dashboard -->
+    <div class="sidebar">
+      <div class="panel-header">
+        <h2>Live Execution Metrics</h2>
+        <span class="status-pill" id="statusPill">Ready</span>
+      </div>
+
+      <!-- Real-time Metric Cards -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="metric-title">Path Length</span>
+          <span class="metric-val highlight-gold" id="metricPathLen">0</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-title">Nodes Explored</span>
+          <span class="metric-val highlight-cyan" id="metricExplored">0</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-title">Execution Time</span>
+          <span class="metric-val highlight-emerald" id="metricTime">0.0 ms</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-title">Optimality</span>
+          <span class="metric-val highlight-purple" id="metricOptimality">—</span>
+        </div>
+      </div>
+
+      <!-- Theory Callout for College AI Practical -->
+      <div class="theory-box" id="theoryBox">
+        <h4 id="theoryTitle">A* Search (Informed)</h4>
+        <p id="theoryDesc">
+          Uses evaluation function <code>f(n) = g(n) + h(n)</code> where <code>h(n)</code> is the Manhattan distance on a 4-directional grid. Admissible and consistent, guaranteeing an optimal shortest path while visiting drastically fewer nodes than BFS.
+        </p>
+      </div>
+
+      <!-- Side-by-Side Comparison Table -->
+      <div class="comparison-section">
+        <h3>
+          <span>Algorithm Comparison</span>
+          <span style="font-size: 0.72rem; color: var(--accent-cyan);" id="compareStatus">—</span>
+        </h3>
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>Algorithm</th>
+              <th>Nodes</th>
+              <th>Length</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody id="compareBody">
+            <tr>
+              <td colspan="4" style="text-align: center; color: var(--text-subtle); padding: 1.5rem 0;">
+                Click "Compare All 4" to benchmark on the current maze
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Toast -->
+  <div id="toast">
+    <span id="toastIcon">ℹ️</span>
+    <span id="toastMsg">Ready</span>
+  </div>
+
+  <!-- Visualizer JavaScript -->
+  <script>
+    // --- Grid Configuration ---
+    const ROWS = 22;
+    const COLS = 42;
+    let startNode = [10, 8];
+    let endNode = [10, 33];
+    let walls = new Set(); // Stores "r,c" strings
+
+    // Interaction State
+    let isMouseDown = false;
+    let isDraggingStart = false;
+    let isDraggingEnd = false;
+    let drawMode = 'wall'; // 'wall' or 'erase'
+    let isVisualizing = false;
+    let animationTimers = [];
+
+    // Theory knowledge base for demonstrations
+    const ALGO_THEORY = {
+      'A*': {
+        title: 'A* Search (Informed Heuristic)',
+        desc: 'Uses evaluation function f(n) = g(n) + h(n) with Manhattan distance |Δr| + |Δc|. Admissible & consistent, guaranteeing optimal shortest path with targeted node expansion.'
+      },
+      'Dijkstra': {
+        title: "Dijkstra's Algorithm (Uniform Cost)",
+        desc: 'Explores radially by cumulative path cost g(n). On unweighted unit grids, all step costs are 1. Guarantees optimal path but explores uniformly in all directions.'
+      },
+      'BFS': {
+        title: 'Breadth-First Search (FIFO Queue)',
+        desc: 'Explores level by level using a queue. Guarantees optimal shortest path on unweighted graphs. High space complexity O(V).'
+      },
+      'DFS': {
+        title: 'Depth-First Search (LIFO Stack)',
+        desc: 'Dives deeply into one direction before backtracking. Does NOT guarantee shortest path and often yields excessively long paths.'
+      }
+    };
+
+    // DOM Elements
+    const gridEl = document.getElementById('grid');
+    const algoSelect = document.getElementById('algoSelect');
+    const mazeSelect = document.getElementById('mazeSelect');
+    const speedSlider = document.getElementById('speedSlider');
+    const speedLabel = document.getElementById('speedLabel');
+    const btnRun = document.getElementById('btnRun');
+    const btnCompare = document.getElementById('btnCompare');
+    const btnClearPath = document.getElementById('btnClearPath');
+    const btnClearWalls = document.getElementById('btnClearWalls');
+    const btnResetAll = document.getElementById('btnResetAll');
+    const statusPill = document.getElementById('statusPill');
+    const metricPathLen = document.getElementById('metricPathLen');
+    const metricExplored = document.getElementById('metricExplored');
+    const metricTime = document.getElementById('metricTime');
+    const metricOptimality = document.getElementById('metricOptimality');
+    const theoryTitle = document.getElementById('theoryTitle');
+    const theoryDesc = document.getElementById('theoryDesc');
+    const compareBody = document.getElementById('compareBody');
+    const compareStatus = document.getElementById('compareStatus');
+    const toast = document.getElementById('toast');
+    const toastMsg = document.getElementById('toastMsg');
+    const toastIcon = document.getElementById('toastIcon');
+
+    // --- Grid Initialization ---
+    function initGrid() {
+      gridEl.style.gridTemplateRows = `repeat(${ROWS}, var(--cell-size))`;
+      gridEl.style.gridTemplateColumns = `repeat(${COLS}, var(--cell-size))`;
+      gridEl.innerHTML = '';
+
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.id = `cell-${r}-${c}`;
+          cell.dataset.row = r;
+          cell.dataset.col = c;
+
+          if (r === startNode[0] && c === startNode[1]) {
+            cell.classList.add('start');
+          } else if (r === endNode[0] && c === endNode[1]) {
+            cell.classList.add('end');
+          }
+
+          // Mouse event listeners for wall drawing & node dragging
+          cell.addEventListener('mousedown', (e) => handleMouseDown(e, r, c));
+          cell.addEventListener('mouseenter', () => handleMouseEnter(r, c));
+          gridEl.appendChild(cell);
+        }
+      }
+
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+
+    function getCell(r, c) {
+      return document.getElementById(`cell-${r}-${c}`);
+    }
+
+    // --- Mouse Interaction Handlers ---
+    function handleMouseDown(e, r, c) {
+      if (isVisualizing) return;
+      e.preventDefault();
+      isMouseDown = true;
+
+      if (r === startNode[0] && c === startNode[1]) {
+        isDraggingStart = true;
+      } else if (r === endNode[0] && c === endNode[1]) {
+        isDraggingEnd = true;
+      } else {
+        const key = `${r},${c}`;
+        if (walls.has(key)) {
+          drawMode = 'erase';
+          walls.delete(key);
+          getCell(r, c).classList.remove('wall');
+        } else {
+          drawMode = 'wall';
+          walls.add(key);
+          getCell(r, c).classList.add('wall');
+        }
+      }
+    }
+
+    function handleMouseEnter(r, c) {
+      if (!isMouseDown || isVisualizing) return;
+
+      const isStart = r === startNode[0] && c === startNode[1];
+      const isEnd = r === endNode[0] && c === endNode[1];
+
+      if (isDraggingStart) {
+        if (!isEnd && !walls.has(`${r},${c}`)) {
+          getCell(startNode[0], startNode[1]).classList.remove('start');
+          startNode = [r, c];
+          getCell(r, c).classList.add('start');
+        }
+      } else if (isDraggingEnd) {
+        if (!isStart && !walls.has(`${r},${c}`)) {
+          getCell(endNode[0], endNode[1]).classList.remove('end');
+          endNode = [r, c];
+          getCell(r, c).classList.add('end');
+        }
+      } else {
+        if (!isStart && !isEnd) {
+          const key = `${r},${c}`;
+          const cell = getCell(r, c);
+          if (drawMode === 'wall') {
+            walls.add(key);
+            cell.classList.add('wall');
+          } else {
+            walls.delete(key);
+            cell.classList.remove('wall');
+          }
+        }
+      }
+    }
+
+    function handleMouseUp() {
+      isMouseDown = false;
+      isDraggingStart = false;
+      isDraggingEnd = false;
+    }
+
+    // --- Toast Notifications ---
+    function showToast(msg, icon = 'ℹ️', duration = 3000) {
+      toastMsg.textContent = msg;
+      toastIcon.textContent = icon;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), duration);
+    }
+
+    // --- State Cleanup & Reset ---
+    function clearAnimationTimers() {
+      animationTimers.forEach(id => clearTimeout(id));
+      animationTimers = [];
+    }
+
+    function clearPathOnly() {
+      clearAnimationTimers();
+      isVisualizing = false;
+      setControlsDisabled(false);
+
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const cell = getCell(r, c);
+          if (cell) {
+            cell.classList.remove('explored', 'path');
+          }
+        }
+      }
+      setStatus('Ready');
+      metricPathLen.textContent = '0';
+      metricExplored.textContent = '0';
+      metricTime.textContent = '0.0 ms';
+      metricOptimality.textContent = '—';
+    }
+
+    function clearAllWalls() {
+      clearPathOnly();
+      walls.clear();
+      document.querySelectorAll('.cell.wall').forEach(el => el.classList.remove('wall'));
+      mazeSelect.value = 'none';
+      showToast('All walls cleared', '🧹');
+    }
+
+    function resetEntireGrid() {
+      clearPathOnly();
+      clearAllWalls();
+      startNode = [10, 8];
+      endNode = [10, 33];
+      initGrid();
+      showToast('Grid reset to default', '🔄');
+    }
+
+    function setControlsDisabled(disabled) {
+      isVisualizing = disabled;
+      btnRun.disabled = disabled;
+      btnCompare.disabled = disabled;
+      algoSelect.disabled = disabled;
+      mazeSelect.disabled = disabled;
+      btnClearWalls.disabled = disabled;
+      btnResetAll.disabled = disabled;
+    }
+
+    function setStatus(text, type = '') {
+      statusPill.textContent = text;
+      statusPill.className = `status-pill ${type}`;
+    }
+
+    // --- Maze Generators ---
+    function applyMaze(type) {
+      clearPathOnly();
+      walls.clear();
+      document.querySelectorAll('.cell.wall').forEach(el => el.classList.remove('wall'));
+
+      if (type === 'random') {
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) {
+            if ((r === startNode[0] && c === startNode[1]) || (r === endNode[0] && c === endNode[1])) continue;
+            if (Math.random() < 0.28) {
+              walls.add(`${r},${c}`);
+              getCell(r, c).classList.add('wall');
+            }
+          }
+        }
+        showToast('Random 28% obstacle maze generated', '🎲');
+      } else if (type === 'trap') {
+        // Enclose target with a U-shaped pocket
+        const tr = endNode[0], tc = endNode[1];
+        for (let r = Math.max(0, tr - 4); r <= Math.min(ROWS - 1, tr + 4); r++) {
+          for (let c = Math.max(0, tc - 6); c <= Math.min(COLS - 1, tc + 2); c++) {
+            if ((r === tr - 4 || r === tr + 4 || c === tc - 6) && !(r === tr && c === tc - 6)) {
+              if (!(r === startNode[0] && c === startNode[1])) {
+                walls.add(`${r},${c}`);
+                getCell(r, c).classList.add('wall');
+              }
+            }
+          }
+        }
+        showToast('U-Trap maze generated: test algorithm backtracking', '🪤');
+      } else if (type === 'corridor') {
+        // Zig-zag corridors
+        for (let r = 3; r < ROWS - 3; r += 4) {
+          const gap = (r % 8 === 3) ? COLS - 5 : 4;
+          for (let c = 0; c < COLS; c++) {
+            if (c !== gap && !(r === startNode[0] && c === startNode[1]) && !(r === endNode[0] && c === endNode[1])) {
+              walls.add(`${r},${c}`);
+              getCell(r, c).classList.add('wall');
+            }
+          }
+        }
+        showToast('Narrow winding corridor created', '🌀');
+      } else if (type === 'spiral') {
+        // Concentric spiral
+        let top = 2, bottom = ROWS - 3, left = 2, right = COLS - 3;
+        while (top <= bottom && left <= right) {
+          for (let c = left; c <= right; c++) if (c !== right - 2) addWall(top, c);
+          for (let r = top + 1; r <= bottom; r++) if (r !== bottom - 2) addWall(r, right);
+          for (let c = right - 1; c >= left; c--) if (c !== left + 2) addWall(bottom, c);
+          for (let r = bottom - 1; r >= top + 2; r--) addWall(r, left);
+          top += 2; bottom -= 2; left += 2; right -= 2;
+        }
+        showToast('Concentric spiral obstacle generated', '🌪️');
+      }
+    }
+
+    function addWall(r, c) {
+      if ((r === startNode[0] && c === startNode[1]) || (r === endNode[0] && c === endNode[1])) return;
+      if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
+        walls.add(`${r},${c}`);
+        const cell = getCell(r, c);
+        if (cell) cell.classList.add('wall');
+      }
+    }
+
+    // --- Animation Engine ---
+    function animateExplorationAndPath(explored, path, success, metrics) {
+      clearAnimationTimers();
+      setControlsDisabled(true);
+      setStatus('Searching...', 'running');
+
+      const speedVal = parseInt(speedSlider.value, 10);
+      const isInstant = speedVal <= 1;
+
+      if (isInstant) {
+        // Instant visual rendering without delay
+        explored.forEach(([r, c]) => {
+          if (!isTerminalNode(r, c)) getCell(r, c)?.classList.add('explored');
+        });
+        if (success && path.length) {
+          path.forEach(([r, c]) => {
+            if (!isTerminalNode(r, c)) getCell(r, c)?.classList.add('path');
+          });
+        }
+        finishVisualization(success, metrics);
+        return;
+      }
+
+      // Step-by-step animation
+      let delay = 0;
+      const stepDuration = Math.max(3, speedVal);
+
+      // Phase 1: Animate explored wavefront
+      explored.forEach(([r, c], idx) => {
+        const timer = setTimeout(() => {
+          if (!isTerminalNode(r, c)) {
+            getCell(r, c)?.classList.add('explored');
+          }
+          metricExplored.textContent = idx + 1;
+        }, delay);
+        animationTimers.push(timer);
+        delay += stepDuration;
+      });
+
+      // Phase 2: Animate shortest path
+      if (success && path.length) {
+        path.forEach(([r, c], idx) => {
+          const timer = setTimeout(() => {
+            if (!isTerminalNode(r, c)) {
+              getCell(r, c)?.classList.add('path');
+            }
+          }, delay);
+          animationTimers.push(timer);
+          delay += stepDuration * 2;
+        });
+      }
+
+      // Completion callback
+      const finalTimer = setTimeout(() => {
+        finishVisualization(success, metrics);
+      }, delay);
+      animationTimers.push(finalTimer);
+    }
+
+    function isTerminalNode(r, c) {
+      return (r === startNode[0] && c === startNode[1]) || (r === endNode[0] && c === endNode[1]);
+    }
+
+    function finishVisualization(success, metrics) {
+      setControlsDisabled(false);
+      if (success) {
+        setStatus('Path Found', 'success');
+        metricPathLen.textContent = metrics.path_length;
+        metricExplored.textContent = metrics.nodes_explored;
+        metricTime.textContent = `${metrics.execution_time_ms} ms`;
+        
+        const isOptimalAlgo = ['A*', 'Dijkstra', 'BFS'].includes(metrics.algorithm);
+        metricOptimality.textContent = isOptimalAlgo ? 'Optimal ✓' : 'Suboptimal';
+        metricOptimality.style.color = isOptimalAlgo ? 'var(--accent-emerald)' : 'var(--accent-amber)';
+        showToast(`${metrics.algorithm} found shortest path in ${metrics.path_length} steps!`, '🎯');
+      } else {
+        setStatus('Unreachable', 'failure');
+        metricPathLen.textContent = '0';
+        metricExplored.textContent = metrics.nodes_explored;
+        metricTime.textContent = `${metrics.execution_time_ms} ms`;
+        metricOptimality.textContent = 'Failed ✗';
+        metricOptimality.style.color = 'var(--accent-rose)';
+        showToast('Target unreachable! No path exists through walls.', '🚫');
+      }
+    }
+
+    // --- Backend API Integration ---
+    async function runSingleVisualizer() {
+      clearPathOnly();
+      const algorithm = algoSelect.value;
+      const wallCoords = Array.from(walls).map(w => w.split(',').map(Number));
+
+      const payload = {
+        rows: ROWS,
+        cols: COLS,
+        start: startNode,
+        end: endNode,
+        walls: wallCoords,
+        algorithm: algorithm
+      };
+
+      try {
+        setStatus('Computing...', 'running');
+        const res = await fetch('/api/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.detail || 'Algorithm search failed');
+        }
+
+        const data = await res.json();
+        animateExplorationAndPath(data.explored, data.path, data.success, data);
+      } catch (err) {
+        setControlsDisabled(false);
+        setStatus('Error', 'failure');
+        showToast(err.message, '⚠️');
+      }
+    }
+
+    async function compareAllAlgorithms() {
+      clearPathOnly();
+      const wallCoords = Array.from(walls).map(w => w.split(',').map(Number));
+
+      const payload = {
+        rows: ROWS,
+        cols: COLS,
+        start: startNode,
+        end: endNode,
+        walls: wallCoords
+      };
+
+      try {
+        setControlsDisabled(true);
+        setStatus('Benchmarking...', 'running');
+        compareStatus.textContent = 'Running 4 algorithms...';
+
+        const res = await fetch('/api/compare', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.detail || 'Comparison request failed');
+        }
+
+        const data = await res.json();
+        renderComparisonTable(data.summary);
+
+        // Animate A* by default to display the path
+        const astarData = data.results['A*'];
+        if (astarData) {
+          animateExplorationAndPath(astarData.explored, astarData.path, astarData.success, astarData);
+        } else {
+          setControlsDisabled(false);
+          setStatus('Ready');
+        }
+
+        compareStatus.textContent = 'Complete';
+        showToast('All 4 algorithms successfully benchmarked!', '🏆');
+      } catch (err) {
+        setControlsDisabled(false);
+        setStatus('Error', 'failure');
+        compareStatus.textContent = 'Error';
+        showToast(err.message, '⚠️');
+      }
+    }
+
+    function renderComparisonTable(summaryList) {
+      compareBody.innerHTML = '';
+      
+      // Determine optimal path length across successful runs
+      const successfulRuns = summaryList.filter(s => s.success);
+      const minLength = successfulRuns.length ? Math.min(...successfulRuns.map(s => s.path_length)) : 0;
+
+      summaryList.forEach(item => {
+        const row = document.createElement('tr');
+        const isOptimal = item.success && item.path_length === minLength;
+
+        row.innerHTML = `
+          <td>
+            <strong>${item.algorithm}</strong>
+            ${isOptimal ? '<span class="badge-optimal">Optimal</span>' : (item.success ? '<span class="badge-suboptimal">Longer</span>' : '<span style="color:#ef4444;">Failed</span>')}
+          </td>
+          <td>${item.nodes_explored}</td>
+          <td>${item.success ? item.path_length : '—'}</td>
+          <td>${item.execution_time_ms} ms</td>
+        `;
+        compareBody.appendChild(row);
+      });
+    }
+
+    // --- Theory Update on Algorithm Change ---
+    function updateTheory() {
+      const algo = algoSelect.value;
+      const info = ALGO_THEORY[algo];
+      if (info) {
+        theoryTitle.textContent = info.title;
+        theoryDesc.textContent = info.desc;
+      }
+    }
+
+    // --- Event Listeners ---
+    algoSelect.addEventListener('change', updateTheory);
+    mazeSelect.addEventListener('change', (e) => applyMaze(e.target.value));
+
+    speedSlider.addEventListener('input', (e) => {
+      const v = e.target.value;
+      speedLabel.textContent = v <= 1 ? 'Instant' : `${v}ms`;
+    });
+
+    btnRun.addEventListener('click', runSingleVisualizer);
+    btnCompare.addEventListener('click', compareAllAlgorithms);
+    btnClearPath.addEventListener('click', clearPathOnly);
+    btnClearWalls.addEventListener('click', clearAllWalls);
+    btnResetAll.addEventListener('click', resetEntireGrid);
+
+    // Initial Setup
+    initGrid();
+    updateTheory();
+  </script>
+</body>
+</html>

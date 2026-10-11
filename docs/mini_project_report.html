@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mini Project Report — PathForge: Shortest Path Visualizer</title>
+  <style>
+    /* Academic Document CSS for Print & Digital Review */
+    @page {
+      size: A4;
+      margin: 20mm 18mm 20mm 18mm;
+
+      @bottom-right {
+        content: "Page " counter(page);
+      }
+    }
+
+    :root {
+      --primary: #1e3a8a;
+      --secondary: #0284c7;
+      --dark: #0f172a;
+      --light-bg: #f8fafc;
+      --border-color: #cbd5e1;
+      --accent: #d97706;
+      --font-body: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      --font-heading: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: 'Consolas', 'Courier New', Courier, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-body);
+      font-size: 11pt;
+      line-height: 1.55;
+      color: #1e293b;
+      background-color: #f1f5f9;
+      padding: 30px 15px;
+    }
+
+    .document-container {
+      max-width: 860px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 55px 65px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      border-radius: 4px;
+    }
+
+    /* Print styling rules */
+    @media print {
+      body {
+        background: transparent;
+        padding: 0;
+      }
+
+      .document-container {
+        max-width: 100%;
+        padding: 0;
+        box-shadow: none;
+        border-radius: 0;
+      }
+
+      .page-break {
+        page-break-before: always;
+        break-before: page;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      a {
+        text-decoration: none;
+        color: inherit;
+      }
+    }
+
+    .page-break {
+      margin-top: 35px;
+      padding-top: 15px;
+      border-top: 1px dashed #e2e8f0;
+    }
+
+    @media print {
+      .page-break {
+        border-top: none;
+        margin-top: 0;
+        padding-top: 0;
+      }
+    }
+
+    /* Print toolbar */
+    .toolbar {
+      max-width: 860px;
+      margin: 0 auto 20px auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+
+    .btn-print {
+      background: var(--secondary);
+      color: white;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+
+    .btn-print:hover {
+      background: #0369a1;
+    }
+
+    /* Institutional Header & Meta Box */
+    .inst-header {
+      text-align: center;
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 15px;
+      margin-bottom: 25px;
+    }
+
+    .inst-header h2 {
+      font-size: 14pt;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .inst-header h3 {
+      font-size: 11pt;
+      font-weight: 600;
+      color: #475569;
+      margin-top: 4px;
+    }
+
+    .inst-header .sub-badge {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 4px 14px;
+      background: #e0f2fe;
+      color: #0369a1;
+      font-size: 9.5pt;
+      font-weight: 600;
+      border-radius: 12px;
+      border: 1px solid #bae6fd;
+    }
+
+    /* Student Particulars Table */
+    .assignment-sheet-box {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0 30px 0;
+      font-size: 10pt;
+    }
+
+    .assignment-sheet-box th,
+    .assignment-sheet-box td {
+      border: 1px solid var(--border-color);
+      padding: 8px 12px;
+      text-align: left;
+    }
+
+    .assignment-sheet-box th {
+      background-color: #f1f5f9;
+      color: #334155;
+      font-weight: 600;
+      width: 25%;
+    }
+
+    .assignment-sheet-box td {
+      background-color: #ffffff;
+      color: #0f172a;
+    }
+
+    /* Headings */
+    h1.project-title {
+      font-size: 18pt;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.3;
+      text-align: center;
+      margin: 25px 0;
+      padding: 10px 0;
+      border-top: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    h2.section-title {
+      font-size: 13pt;
+      font-weight: 700;
+      color: var(--primary);
+      border-bottom: 1.5px solid var(--primary);
+      padding-bottom: 4px;
+      margin: 24px 0 12px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    h3.sub-section-title {
+      font-size: 11.5pt;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 16px 0 8px 0;
+    }
+
+    p {
+      margin-bottom: 10px;
+      text-align: justify;
+    }
+
+    ul,
+    ol {
+      margin: 8px 0 14px 24px;
+    }
+
+    li {
+      margin-bottom: 4px;
+    }
+
+    /* Tables */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 20px 0;
+      font-size: 9.5pt;
+    }
+
+    table.data-table th,
+    table.data-table td {
+      border: 1px solid var(--border-color);
+      padding: 7px 10px;
+      text-align: left;
+    }
+
+    table.data-table th {
+      background-color: #f8fafc;
+      color: #1e293b;
+      font-weight: 700;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    table.data-table tr:nth-child(even) td {
+      background-color: #f8fafc;
+    }
+
+    .badge-optimal {
+      color: #15803d;
+      font-weight: 700;
+      background: #dcfce7;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 8.5pt;
+    }
+
+    .badge-suboptimal {
+      color: #b45309;
+      font-weight: 700;
+      background: #fef3c7;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 8.5pt;
+    }
+
+    /* Code & Formulas */
+    pre,
+    code {
+      font-family: var(--font-mono);
+    }
+
+    pre {
+      background-color: #0f172a;
+      color: #f1f5f9;
+      padding: 12px 14px;
+      border-radius: 5px;
+      font-size: 8.5pt;
+      line-height: 1.45;
+      overflow-x: auto;
+      margin: 12px 0 16px 0;
+    }
+
+    code.inline-code {
+      background-color: #e2e8f0;
+      color: #0f172a;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 9pt;
+    }
+
+    .formula-box {
+      background: #f8fafc;
+      border-left: 4px solid var(--secondary);
+      padding: 10px 16px;
+      margin: 12px 0;
+      font-style: italic;
+      color: #0f172a;
+      font-size: 10.5pt;
+    }
+
+    .ascii-box {
+      background: #1e293b;
+      color: #38bdf8;
+      font-family: var(--font-mono);
+      font-size: 8pt;
+      padding: 12px;
+      border-radius: 4px;
+      line-height: 1.35;
+      margin: 12px 0;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    /* References */
+    .references-list {
+      list-style-type: none;
+      margin-left: 0;
+      padding-left: 0;
+      font-size: 9.5pt;
+    }
+
+    .references-list li {
+      margin-bottom: 8px;
+      padding-left: 28px;
+      text-indent: -28px;
+      line-height: 1.4;
+    }
+
+    .toc {
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 15px 22px;
+      margin: 20px 0 30px 0;
+    }
+
+    .toc ul {
+      margin: 8px 0 0 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Screen-Only Toolbar -->
+  <div class="toolbar no-print">
+    <div>
+      <strong>PathForge Academic Report:</strong> Individual Mini Project Assignment Sheet
+    </div>
+    <button class="btn-print" onclick="window.print()">
+      🖨️ Print / Save as PDF (A4)
+    </button>
+  </div>
+
+  <div class="document-container">
+
+    <!-- INSTITUTIONAL COVER & ASSIGNMENT HEADER -->
+    <header class="inst-header">
+      <h2>Department of Computer Science and Engineering</h2>
+      <h3>Artificial Intelligence & Machine Learning Laboratory (Course Code: CS601PC)</h3>
+      <span class="sub-badge">Academic Year 2025–2026 | Individual Mini Project Assignment Sheet</span>
+    </header>
+
+    <!-- STUDENT SUBMISSION SHEET DETAILS -->
+    <table class="assignment-sheet-box">
+      <tr>
+        <th>Student Name</th>
+        <td>(Insert Student Name)</td>
+        <th>Roll No / USN</th>
+        <td>(Insert Roll Number / USN)</td>
+      </tr>
+      <tr>
+        <th>Department / Class</th>
+        <td>B.Tech CSE (AI & ML) — VI Sem</td>
+        <th>Section / Batch</th>
+        <td>Section A / Batch B1</td>
+      </tr>
+      <tr>
+        <th>Project Guide</th>
+        <td>(Insert Faculty Mentor Name)</td>
+        <th>Date of Submission</th>
+        <td>October 11, 2026</td>
+      </tr>
+      <tr>
+        <th>Maximum Marks</th>
+        <td>50 Marks</td>
+        <th>Marks Awarded</th>
+        <td>________ / 50 Marks</td>
+      </tr>
+      <tr>
+        <th>Evaluation Status</th>
+        <td colspan="3">
+          <strong>Reviewer Remarks:</strong> ____________________________________________________________________<br>
+          <strong>Signature of Faculty Evaluator:</strong> _____________________________________________________
+        </td>
+      </tr>
+    </table>
+
+    <!-- PROJECT TITLE -->
+    <h1 class="project-title">
+      PathForge: Heuristic and Blind Graph Search Optimization on Dynamic 2D Obstacle Grids — An Empirical Comparative
+      Evaluation of A*, Dijkstra, BFS, and DFS
+    </h1>
+
+    <!-- TABLE OF CONTENTS -->
+    <div class="toc">
+      <h3 style="font-size: 11pt; color: var(--primary); margin-bottom: 6px;">Report Sections:</h3>
+      <ol style="columns: 2; margin-left: 20px; font-size: 9.5pt;">
+        <li><a href="#sec-1">Title of the Project</a></li>
+        <li><a href="#sec-2">Problem Statement</a></li>
+        <li><a href="#sec-3">Objectives</a></li>
+        <li><a href="#sec-4">Dataset / Input Description</a></li>
+        <li><a href="#sec-5">Algorithm / AI-ML Technique Used</a></li>
+        <li><a href="#sec-6">Methodology / Approach</a></li>
+        <li><a href="#sec-7">Implementation Details</a></li>
+        <li><a href="#sec-8">Results / Output</a></li>
+        <li><a href="#sec-9">Performance Evaluation</a></li>
+        <li><a href="#sec-10">Analysis / Discussion</a></li>
+        <li><a href="#sec-11">Conclusion</a></li>
+        <li><a href="#sec-12">Future Scope</a></li>
+        <li><a href="#sec-13">References</a></li>
+      </ol>
+    </div>
+
+    <!-- SECTION 1 -->
+    <h2 class="section-title" id="sec-1">1. Title of the Project</h2>
+    <p>
+      <strong>PathForge: Heuristic and Blind Graph Search Optimization on Dynamic 2D Obstacle Grids — An Empirical
+        Comparative Evaluation of A*, Dijkstra, BFS, and DFS</strong>
+    </p>
+
+    <!-- SECTION 2 -->
+    <h2 class="section-title" id="sec-2">2. Problem Statement</h2>
+    <p>
+      Pathfinding in planar spatial topologies is an essential problem across artificial intelligence, autonomous
+      robotics, automated guided vehicles (AGVs), automated logistics, and computer gaming simulations. Formally, given
+      a discrete 2D grid workspace &Wopf; &sub; &Zopf;<sup>2</sup> of size <em>R &times; C</em>, the configuration space
+      is partitioned into traversable free space &Copf;<sub>free</sub> and impassable obstacle regions
+      &Copf;<sub>obs</sub>:
+    </p>
+    <div class="formula-box">
+      &Wopf; = &Copf;<sub>free</sub> &cup; &Copf;<sub>obs</sub>, &nbsp;&nbsp;&nbsp;&nbsp; &Copf;<sub>free</sub> &cap;
+      &Copf;<sub>obs</sub> = &empty;
+    </div>
+    <p>
+      The space is represented as an unweighted, undirected graph <em>G = (V, E)</em> where each vertex <em>v = (r, c)
+        &isin; V</em> represents a passable grid coordinate. Edges connect orthogonal 4-connected spatial neighbors with
+      uniform transition cost <em>w(u, v) = 1</em>:
+    </p>
+    <div class="formula-box">
+      &Nscr;(r, c) = {(r-1, c), (r+1, c), (r, c-1), (r, c+1)} &cap; &Copf;<sub>free</sub>
+    </div>
+    <p>
+      Given an initial source state <em>S = (r<sub>s</sub>, c<sub>s</sub>) &isin; &Copf;<sub>free</sub></em> and a
+      target destination <em>T = (r<sub>t</sub>, c<sub>t</sub>) &isin; &Copf;<sub>free</sub></em>, the shortest-path
+      problem requires finding an ordered sequence of vertices &Pscr;<sup>*</sup> = &lang;v<sub>0</sub>, v<sub>1</sub>,
+      &hellip;, v<sub>k</sub>&rang; such that <em>v<sub>0</sub> = S</em>, <em>v<sub>k</sub> = T</em>, and the cumulative
+      path cost is minimized:
+    </p>
+    <div class="formula-box">
+      L(&Pscr;<sup>*</sup>) = &sum;<sub>i=0</sub><sup>k-1</sup> w(v<sub>i</sub>, v<sub>i+1</sub>) = k = min<sub>&Pscr;
+        &isin; &Omega;(S, T)</sub> L(&Pscr;)
+    </div>
+    <p>
+      <strong>Core Engineering Challenges:</strong>
+    </p>
+    <ul>
+      <li><strong>State-Space Explosion:</strong> Blind uninformed algorithms (BFS, Dijkstra) expand radially in all
+        directions. In open grids, finding a goal at distance <em>d</em> requires exploring &Oscr;(d<sup>2</sup>) nodes,
+        resulting in high CPU and memory consumption.</li>
+      <li><strong>Concave Obstacle Traps:</strong> Complex topologies (such as U-traps or narrow corridors) present
+        local minima where greedy heuristics can get trapped or unguided algorithms (DFS) wander into deep, unnecessary
+        detours.</li>
+      <li><strong>Optimality vs. Latency Trade-off:</strong> Identifying whether informed heuristic search (A*)
+        guarantees global path optimality while minimizing the explored node count across diverse obstacle topologies.
+      </li>
+    </ul>
+
+    <!-- SECTION 3 -->
+    <h2 class="section-title" id="sec-3">3. Objectives</h2>
+    <ol>
+      <li><strong>Algorithmic Formulation:</strong> Implement four core search paradigms in Python 3: Breadth-First
+        Search (BFS), Depth-First Search (DFS), Dijkstra’s Algorithm, and A* Search, without relying on third-party
+        graph libraries.</li>
+      <li><strong>Mathematical Heuristic Formulation:</strong> Derive and prove the admissibility and consistency of the
+        Manhattan Distance (<em>L</em><sub>1</sub> norm) heuristic for 4-connected grid topologies.</li>
+      <li><strong>Dynamic Simulation & Visualization:</strong> Develop an interactive web visualizer supporting dynamic
+        wall placement, movable start/target nodes, procedural obstacle presets, and adjustable animation speeds.</li>
+      <li><strong>Automated Comparative Benchmarking:</strong> Build an endpoint (<code>/api/compare</code>) that runs
+        all four algorithms simultaneously under identical grid conditions and records path length, nodes explored,
+        execution latency, and success status.</li>
+      <li><strong>Software Validation:</strong> Construct automated unit test suites verifying boundary limits, obstacle
+        collisions, Manhattan calculations, and disconnected target handling.</li>
+    </ol>
+
+    <div class="page-break"></div>
+
+    <!-- SECTION 4 -->
+    <h2 class="section-title" id="sec-4">4. Dataset & Input Description</h2>
+    <p>
+      Graph search algorithms operate on synthesized 2D spatial lattices rather than static tabular CSV files. In this
+      project, the dataset consists of procedurally and interactively generated grid configurations:
+    </p>
+    <ul>
+      <li><strong>Grid Configuration:</strong> Configured baseline of <em>20 rows &times; 35 columns</em> (|V| = 700
+        discrete state cells), scalable up to <em>60 &times; 80</em> (4,800 nodes).</li>
+      <li><strong>Spatial Node Representation:</strong> Nodes are modeled as integer coordinate tuples <em>(r, c)</em>
+        where <em>0 &le; r &lt; R</em> and <em>0 &le; c &lt; C</em>.</li>
+      <li><strong>Obstacle Representation:</strong> Stored in an in-memory hash set (<code>Set[Tuple[int, int]]</code>),
+        enabling average-case &Oscr;(1) collision queries during neighbor generation.</li>
+    </ul>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Scenario ID</th>
+          <th>Topology Profile</th>
+          <th>Grid Size</th>
+          <th>Obstacles</th>
+          <th>Density</th>
+          <th>Key Spatial Characteristics</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>DS-01</strong></td>
+          <td><strong>Open Grid</strong></td>
+          <td>20 &times; 35</td>
+          <td>0</td>
+          <td>0.0%</td>
+          <td>Unobstructed free space; tests baseline radial exploration vs heuristic targeting.</td>
+        </tr>
+        <tr>
+          <td><strong>DS-02</strong></td>
+          <td><strong>U-Trap Pocket</strong></td>
+          <td>20 &times; 35</td>
+          <td>31</td>
+          <td>4.4%</td>
+          <td>Concave obstacle trap enclosing Start node; tests local minimum escape.</td>
+        </tr>
+        <tr>
+          <td><strong>DS-03</strong></td>
+          <td><strong>Random Obstacles</strong></td>
+          <td>20 &times; 35</td>
+          <td>209</td>
+          <td>29.9%</td>
+          <td>Bernoulli distribution; generates micro-corridors and island clusters.</td>
+        </tr>
+        <tr>
+          <td><strong>DS-04</strong></td>
+          <td><strong>Narrow Corridors</strong></td>
+          <td>20 &times; 35</td>
+          <td>34</td>
+          <td>4.9%</td>
+          <td>Long parallel baffle walls forcing serpentine navigation; tests depth-first deviation.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- SECTION 5 -->
+    <h2 class="section-title" id="sec-5">5. Algorithm & AI/ML Techniques Used</h2>
+    <p>
+      The system implements four distinct search algorithms covering both blind (uninformed) and heuristic (informed)
+      graph search paradigms:
+    </p>
+
+    <h3 class="sub-section-title">5.1 Breadth-First Search (BFS)</h3>
+    <p>
+      BFS expands the search frontier level-by-level using a First-In, First-Out (FIFO) queue
+      (<code>collections.deque</code>). Because each grid step has uniform unit cost <em>w(u, v) = 1</em>, the path
+      length increases monotonically with frontier depth. BFS guarantees finding the optimal shortest path on unweighted
+      graphs:
+    </p>
+    <div class="formula-box">
+      L(&Pscr;<sub>BFS</sub>) = L(&Pscr;<sup>*</sup>), &nbsp;&nbsp;&nbsp;&nbsp; \text{Time Complexity: } &Oscr;(|V| +
+      |E|)
+    </div>
+
+    <h3 class="sub-section-title">5.2 Depth-First Search (DFS)</h3>
+    <p>
+      DFS explores deeply along each branch using a Last-In, First-Out (LIFO) stack before backtracking. DFS does not
+      evaluate path costs <em>g(n)</em> or frontier depth. It commits to whichever orthogonal neighbor is processed
+      first. As a result, DFS does not guarantee the shortest path and often produces suboptimal routes with high detour
+      overhead.
+    </p>
+
+    <h3 class="sub-section-title">5.3 Dijkstra's Algorithm (Uniform-Cost Search)</h3>
+    <p>
+      Dijkstra’s algorithm explores graphs with non-negative edge weights using a priority queue (min-heap) ordered by
+      cumulative path cost <em>g(n)</em>. On an unweighted 4-directional grid where all edge weights equal 1, Dijkstra's
+      node expansion sequence mirrors BFS, but with min-heap maintenance overhead:
+    </p>
+    <div class="formula-box">
+      g(v) = \min_{(u, v) &isin; E} [g(u) + 1], &nbsp;&nbsp;&nbsp;&nbsp; \text{Time Complexity: } &Oscr;((|V| + |E|)
+      \log |V|)
+    </div>
+
+    <h3 class="sub-section-title">5.4 A* Heuristic Search</h3>
+    <p>
+      A* guides node expansion toward the goal by evaluating candidates using:
+    </p>
+    <div class="formula-box">
+      f(n) = g(n) + h(n)
+    </div>
+    <p>
+      where <em>g(n)</em> is the actual cost from the start node to node <em>n</em>, and <em>h(n)</em> is the heuristic
+      estimate from node <em>n</em> to target <em>T</em>.
+    </p>
+    <p>
+      <strong>Manhattan Distance Heuristic:</strong> Because movement is constrained to the 4 cardinal directions (no
+      diagonals allowed), the straight-line grid distance is given by the <em>L</em><sub>1</sub> norm:
+    </p>
+    <div class="formula-box">
+      h(n) = |r_n - r_T| + |c_n - c_T|
+    </div>
+    <p>
+      <strong>Admissibility & Consistency:</strong> The Manhattan distance represents the minimum possible steps between
+      two grid points without obstacles. Any obstacle can only increase or maintain this distance, never decrease it
+      (<em>h(n) &le; h*(n)</em>). Because <em>h(n)</em> is admissible and consistent, A* is mathematically guaranteed to
+      find the optimal shortest path while expanding fewer nodes than uninformed methods.
+    </p>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Algorithm</th>
+          <th>Type</th>
+          <th>Frontier Structure</th>
+          <th>Shortest Path Guarantee</th>
+          <th>Time Complexity</th>
+          <th>Space Complexity</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>BFS</strong></td>
+          <td>Uninformed</td>
+          <td>FIFO Queue</td>
+          <td><span class="badge-optimal">Guaranteed (Unweighted)</span></td>
+          <td>&Oscr;(|V| + |E|)</td>
+          <td>&Oscr;(|V|)</td>
+        </tr>
+        <tr>
+          <td><strong>DFS</strong></td>
+          <td>Uninformed</td>
+          <td>LIFO Stack</td>
+          <td><span class="badge-suboptimal">Not Guaranteed</span></td>
+          <td>&Oscr;(|V| + |E|)</td>
+          <td>&Oscr;(|V|)</td>
+        </tr>
+        <tr>
+          <td><strong>Dijkstra</strong></td>
+          <td>Uninformed</td>
+          <td>Min-Heap / Priority Queue</td>
+          <td><span class="badge-optimal">Guaranteed</span></td>
+          <td>&Oscr;((|V| + |E|) log |V|)</td>
+          <td>&Oscr;(|V|)</td>
+        </tr>
+        <tr>
+          <td><strong>A* Search</strong></td>
+          <td>Informed</td>
+          <td>Min-Heap (by f = g + h)</td>
+          <td><span class="badge-optimal">Guaranteed (Admissible)</span></td>
+          <td>&Oscr;(|E|) to &Oscr;(|E| log |V|)</td>
+          <td>&Oscr;(|V|)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="page-break"></div>
+
+    <!-- SECTION 6 -->
+    <h2 class="section-title" id="sec-6">6. Methodology / Approach</h2>
+    <p>
+      PathForge is structured as a decoupled full-stack architecture:
+    </p>
+    <div class="ascii-box">
+      +-----------------------------------------------------------------------------+
+      | PathForge System Pipeline |
+      | |
+      | [Browser UI] <====== Asynchronous JSON======> [FastAPI Service] |
+        | - HTML5 Dynamic Grid - Request Validation |
+        | - Wall Painting / Dragging - Endpoint Routing |
+        | - Dual-Phase Animation Engine - Benchmarking Engine |
+        | | | |
+        | v v |
+        | DOM Grid Render algorithms.py Core Graph Engine
+        | (Exploration & Path) - BFS (FIFO Queue) |
+        | - DFS (LIFO Stack) |
+        | - Dijkstra (Min-Heap) |
+        | - A* Search (Manhattan Heap) |
+        +-----------------------------------------------------------------------------+
+    </div>
+    <h3 class="sub-section-title">Min-Heap Tuple Ordering Invariant</h3>
+    <p>
+      When using Python’s standard <code>heapq</code> module, storing raw tuples like <code>(cost, (r, c))</code> causes
+      comparisons on the coordinate tuple whenever two nodes share identical costs. PathForge resolves this by inserting
+      a monotonic counter:
+    </p>
+    <div class="formula-box">
+      \text{Heap Tuple: } (f(n), \; h(n), \; \text{counter}, \; (r, c))
+    </div>
+    <p>
+      This structure ensures that coordinate tuples are never compared, breaks ties in favor of nodes closer to the
+      target (lower <em>h(n)</em>), and preserves FIFO order for identical scores.
+    </p>
+
+    <!-- SECTION 7 -->
+    <h2 class="section-title" id="sec-7">7. Implementation Details</h2>
+    <p>
+      The implementation consists of modular Python backend files and a zero-dependency frontend:
+    </p>
+    <ul>
+      <li><code>algorithms.py</code>: Implements BFS, DFS, Dijkstra, and A* along with <code>run_algorithm()</code> and
+        <code>run_all_algorithms()</code>.</li>
+      <li><code>app.py</code>: Implements the FastAPI service, static file routes, Pydantic validation schemas, and REST
+        endpoints.</li>
+      <li><code>static/index.html</code>: Provides an interactive UI with dynamic CSS Grid rendering, pointer event
+        listeners, and animated wavefront visualization.</li>
+    </ul>
+
+    <pre><code># Core A* Search Implementation Snippet (algorithms.py)
+def astar(rows: int, cols: int, start: Coordinate, end: Coordinate, wall_set: Set[Coordinate]):
+    start_time = time.perf_counter()
+    counter = 0
+    h_start = abs(start[0] - end[0]) + abs(start[1] - end[1])
+    pq = [(h_start, h_start, counter, start)]
+    g_costs = {start: 0}
+    parent = {start: None}
+    visited = set()
+    explored_order = []
+
+    while pq:
+        _, _, _, current = heapq.heappop(pq)
+        if current in visited: continue
+        visited.add(current)
+        explored_order.append(list(current))
+
+        if current == end: break
+
+        for dr, dc in [(-1, 0), (0, 1), (1, 0), (0, -1)]:
+            neighbor = (current[0] + dr, current[1] + dc)
+            if 0 <= neighbor[0] < rows and 0 <= neighbor[1] < cols and neighbor not in wall_set:
+                tentative_g = g_costs[current] + 1
+                if tentative_g < g_costs.get(neighbor, float("inf")):
+                    g_costs[neighbor] = tentative_g
+                    h = abs(neighbor[0] - end[0]) + abs(neighbor[1] - end[1])
+                    parent[neighbor] = current
+                    counter += 1
+                    heapq.heappush(pq, (tentative_g + h, h, counter, neighbor))
+    ...</code></pre>
+
+    <div class="page-break"></div>
+
+    <!-- SECTION 8 -->
+    <h2 class="section-title" id="sec-8">8. Results & Output</h2>
+    <p>
+      Empirical evaluations were conducted on a 64-bit environment using Python 3.12 across four benchmark scenarios on
+      a standard <em>20 &times; 35</em> grid (700 cells total):
+    </p>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Test Scenario</th>
+          <th>Algorithm</th>
+          <th>Success</th>
+          <th>Path Length (L)</th>
+          <th>Nodes Explored (N)</th>
+          <th>Time (ms)</th>
+          <th>Optimality Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Scenario 1 -->
+        <tr>
+          <td rowspan="4"><strong>Scenario 1: Open Grid</strong><br>(20&times;35, Walls = 0)<br>S=(0,0), T=(19,34)</td>
+          <td><strong>BFS</strong></td>
+          <td>True</td>
+          <td>53</td>
+          <td>700</td>
+          <td>1.335 ms</td>
+          <td><span class="badge-optimal">Optimal</span></td>
+        </tr>
+        <tr>
+          <td><strong>DFS</strong></td>
+          <td>True</td>
+          <td>53</td>
+          <td>54</td>
+          <td>0.115 ms</td>
+          <td>Coincidentally Optimal</td>
+        </tr>
+        <tr>
+          <td><strong>Dijkstra</strong></td>
+          <td>True</td>
+          <td>53</td>
+          <td>700</td>
+          <td>1.911 ms</td>
+          <td><span class="badge-optimal">Optimal</span></td>
+        </tr>
+        <tr>
+          <td><strong>A* Search</strong></td>
+          <td>True</td>
+          <td>53</td>
+          <td>54</td>
+          <td>0.192 ms</td>
+          <td><span class="badge-optimal">Optimal (92.3% Less Nodes)</span></td>
+        </tr>
+        <!-- Scenario 2 -->
+        <tr>
+          <td rowspan="4"><strong>Scenario 2: U-Trap Pocket</strong><br>(20&times;35, Walls = 31)<br>S=(10,15), T=(2,2)
+          </td>
+          <td><strong>BFS</strong></td>
+          <td>True</td>
+          <td>21</td>
+          <td>292</td>
+          <td>0.463 ms</td>
+          <td><span class="badge-optimal">Optimal</span></td>
+        </tr>
+        <tr>
+          <td><strong>DFS</strong></td>
+          <td>True</td>
+          <td>21</td>
+          <td>629</td>
+          <td>31.168 ms</td>
+          <td>Severe Branching (222&times; Slower)</td>
+        </tr>
+        <tr>
+          <td><strong>Dijkstra</strong></td>
+          <td>True</td>
+          <td>21</td>
+          <td>292</td>
+          <td>1.236 ms</td>
+          <td><span class="badge-optimal">Optimal</span></td>
+        </tr>
+        <tr>
+          <td><strong>A* Search</strong></td>
+          <td>True</td>
+          <td>21</td>
+          <td>22</td>
+          <td>0.140 ms</td>
+          <td><span class="badge-optimal">Optimal (92.5% Less Nodes)</span></td>
+        </tr>
+        <!-- Scenario 3 -->
+        <tr>
+          <td rowspan="4"><strong>Scenario 3: Random 30%</strong><br>(20&times;35, Walls = 209)<br>S=(0,0), T=(19,34)
+          </td>
+          <td><strong>BFS</strong></td>
+          <td>False</td>
+          <td>0</td>
+          <td>15</td>
+          <td>0.045 ms</td>
+          <td>Complete (Unreachable)</td>
+        </tr>
+        <tr>
+          <td><strong>DFS</strong></td>
+          <td>False</td>
+          <td>0</td>
+          <td>15</td>
+          <td>0.048 ms</td>
+          <td>Complete (Unreachable)</td>
+        </tr>
+        <tr>
+          <td><strong>Dijkstra</strong></td>
+          <td>False</td>
+          <td>0</td>
+          <td>15</td>
+          <td>0.061 ms</td>
+          <td>Complete (Unreachable)</td>
+        </tr>
+        <tr>
+          <td><strong>A* Search</strong></td>
+          <td>False</td>
+          <td>0</td>
+          <td>15</td>
+          <td>0.068 ms</td>
+          <td>Complete (Unreachable)</td>
+        </tr>
+        <!-- Scenario 4 -->
+        <tr>
+          <td rowspan="4"><strong>Scenario 4: Narrow Corridors</strong><br>(20&times;35, Walls = 34)<br>S=(0,0),
+            T=(19,34)</td>
+          <td><strong>BFS</strong></td>
+          <td>True</td>
+          <td>83</td>
+          <td>666</td>
+          <td>1.610 ms</td>
+          <td><span class="badge-optimal">Optimal</span></td>
+        </tr>
+        <tr>
+          <td><strong>DFS</strong></td>
+          <td>True</td>
+          <td>87</td>
+          <td>88</td>
+          <td>0.267 ms</td>
+          <td><span class="badge-suboptimal">Suboptimal (+4 Steps)</span></td>
+        </tr>
+        <tr>
+          <td><strong>Dijkstra</strong></td>
+          <td>True</td>
+          <td>83</td>
+          <td>666</td>
+          <td>2.192 ms</td>
+          <td><span class="badge-optimal">Optimal</span></td>
+        </tr>
+        <tr>
+          <td><strong>A* Search</strong></td>
+          <td>True</td>
+          <td>83</td>
+          <td>421</td>
+          <td>2.652 ms</td>
+          <td><span class="badge-optimal">Optimal</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- SECTION 9 -->
+    <h2 class="section-title" id="sec-9">9. Performance Evaluation</h2>
+    <p>
+      The benchmark data demonstrates significant differences across the four algorithms:
+    </p>
+    <ul>
+      <li><strong>Search Space Reduction:</strong> On an unconstrained open grid, BFS and Dijkstra expanded all 700
+        cells to find the 53-step path. A* expanded only 54 nodes—a <strong>92.29% reduction</strong> in explored state
+        space while finding the identical optimal path.</li>
+      <li><strong>Performance in Concave Obstacles:</strong> In the U-Trap scenario, A* expanded only 22 nodes to reach
+        the target, escaping the pocket cleanly. Uninformed BFS and Dijkstra explored 292 nodes each. DFS suffered heavy
+        branching overhead, visiting 629 nodes and taking 31.168 ms.</li>
+      <li><strong>Path Suboptimality in Corridors:</strong> In Scenario 4, DFS took an exploratory side branch and
+        produced a path of length 87 (+4 steps longer than the optimal length of 83 found by BFS, Dijkstra, and A*).
+      </li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <!-- SECTION 10 -->
+    <h2 class="section-title" id="sec-10">10. Analysis & Discussion</h2>
+    <h3 class="sub-section-title">10.1 Heuristic Selection for 4-Directional Grids</h3>
+    <p>
+      The choice of heuristic is directly tied to the movement constraints of the grid:
+    </p>
+    <ul>
+      <li><strong>Euclidean Distance (<em>L</em><sub>2</sub>):</strong> <em>&radic;(&Delta;r<sup>2</sup> +
+          &Delta;c<sup>2</sup>)</em> is admissible, but underestimates actual travel costs on 4-connected grids because
+        diagonal steps are prohibited. This looser bound causes A* to expand more nodes than necessary.</li>
+      <li><strong>Manhattan Distance (<em>L</em><sub>1</sub>):</strong> <em>|&Delta;r| + |&Delta;c|</em> provides the
+        exact minimal travel distance on an unconstrained 4-connected grid. This tighter lower bound focuses the search
+        directly toward the target.</li>
+    </ul>
+
+    <h3 class="sub-section-title">10.2 Robustness in Local Minima</h3>
+    <p>
+      Greedy Best-First Search (which uses only <em>f(n) = h(n)</em>) can become trapped inside concave obstacles as it
+      prioritizes nodes closest to the goal. In contrast, A* balances heuristic guidance with accumulated cost (<em>f(n)
+        = g(n) + h(n)</em>). As nodes inside a cul-de-sac accumulate higher <em>g(n)</em> costs, their overall
+      <em>f(n)</em> values rise, allowing A* to naturally backtrack and route around the obstacle.
+    </p>
+
+    <!-- SECTION 11 -->
+    <h2 class="section-title" id="sec-11">11. Conclusion</h2>
+    <p>
+      The <strong>PathForge</strong> mini project implemented, visualized, and empirically benchmarked four core graph
+      search algorithms across multiple obstacle topologies.
+    </p>
+    <p>
+      The results confirm theoretical expectations: A* with the Manhattan distance heuristic consistently produces
+      globally optimal paths while reducing expanded nodes by up to 92.3% compared to uninformed BFS and Dijkstra.
+      Uninformed BFS and Dijkstra guarantee optimal solutions on uniform grids, but at the cost of expanding nodes
+      across the entire space. DFS operates quickly on simple topologies but does not guarantee shortest paths and can
+      produce severe detours and high latencies in constrained environments.
+    </p>
+
+    <!-- SECTION 12 -->
+    <h2 class="section-title" id="sec-12">12. Future Scope</h2>
+    <ol>
+      <li><strong>8-Directional Diagonal Movement:</strong> Extend neighbor generation to include diagonals, using the
+        <strong>Octile Distance</strong> heuristic with corner-cutting prevention:
+        <div class="formula-box">
+          h(n) = (|\Delta r| + |\Delta c|) + (\sqrt{2} - 2) \min(|\Delta r|, |\Delta c|)
+        </div>
+      </li>
+      <li><strong>Dynamic Re-planning (D* Lite):</strong> Implement incremental heuristic search to re-plan paths in
+        real time when dynamic obstacles block previously computed routes.</li>
+      <li><strong>Kinematic Planning:</strong> Connect discrete grid search with continuous robotic motion models using
+        <strong>Hybrid A*</strong> or <strong>RRT*</strong>, incorporating turning radius constraints.</li>
+      <li><strong>Multi-Agent Pathfinding (MAPF):</strong> Implement Conflict-Based Search (CBS) for coordinated routing
+        of multiple agents in shared warehouse environments.</li>
+    </ol>
+
+    <!-- SECTION 13 -->
+    <h2 class="section-title" id="sec-13">13. References</h2>
+    <ul class="references-list">
+      <li>[1] Hart, P. E., Nilsson, N. J., & Raphael, B. (1968). "A Formal Basis for the Heuristic Determination of
+        Minimum Cost Paths." <em>IEEE Transactions on Systems Science and Cybernetics</em>, 4(2), 100–107.</li>
+      <li>[2] Dijkstra, E. W. (1959). "A Note on Two Problems in Connexion with Graphs." <em>Numerische Mathematik</em>,
+        1(1), 269–271.</li>
+      <li>[3] Russell, S., & Norvig, P. (2020). <em>Artificial Intelligence: A Modern Approach</em> (4th ed.). Pearson
+        Education.</li>
+      <li>[4] Cormen, T. H., Leiserson, C. E., Rivest, R. L., & Stein, C. (2022). <em>Introduction to Algorithms</em>
+        (4th ed.). MIT Press.</li>
+      <li>[5] Koenig, S., & Likhachev, M. (2002). "D* Lite." <em>Eighteenth National Conference on Artificial
+          Intelligence (AAAI-02)</em>, 476–483.</li>
+      <li>[6] Goldberg, A. V., & Harrelson, C. (2005). "Computing the Shortest Path: A* Search Meets Graph Theory."
+        <em>Proceedings of the 16th ACM-SIAM Symposium on Discrete Algorithms (SODA)</em>, 156–165.</li>
+      <li>[7] LaValle, S. M. (1998). "Rapidly-Exploring Random Trees: A New Tool for Path Planning." <em>Technical
+          Report TR 98-11</em>, Iowa State University.</li>
+      <li>[8] Silver, D. (2005). "Cooperative Pathfinding." <em>First Artificial Intelligence and Interactive Digital
+          Entertainment Conference (AIIDE)</em>, 117–122.</li>
+      <li>[9] Stentz, A. (1994). "Optimal and Efficient Path Planning for Partially-Known Environments." <em>IEEE
+          International Conference on Robotics and Automation (ICRA)</em>, 3310–3317.</li>
+      <li>[10] Yap, P. (2002). "Grid-based Path-Finding." <em>Lecture Notes in Computer Science</em>, vol 2557,
+        Springer, 441–452.</li>
+      <li>[11] Ferguson, D., & Stentz, A. (2006). "Using Interpolation to Improve Path Planning: The Field D*
+        Algorithm." <em>Journal of Field Robotics</em>, 23(2), 79–101.</li>
+      <li>[12] FastAPI Documentation & Specifications. <em>Tiangolo (2024).</em> High performance Python API framework.
+        Available: <code>https://fastapi.tiangolo.com/</code>.</li>
+    </ul>
+
+    <!-- SIGN-OFF FOOTER -->
+    <div
+      style="margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; font-size: 9.5pt; color: #64748b;">
+      <div>PathForge AI Mini Project — CS601PC</div>
+      <div>Department of Computer Science & Engineering</div>
+      <div>October 2026</div>
+    </div>
+
+  </div>
+
+</body>
+
+</html>
