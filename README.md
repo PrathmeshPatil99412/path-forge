@@ -120,4 +120,4 @@ python -m unittest test_app.py
 2. **Why is Manhattan distance used instead of Euclidean distance here?**
    - *Answer*: Movement is strictly 4-directional (Up, Down, Left, Right). Manhattan distance represents the exact minimum grid steps without diagonal movement, making it admissible ($h(n) \le h^*(n)$) and consistent.
 3. **When does DFS fail to find the shortest path?**
-   - *Answer*: DFS dives deep down whichever branch it explores first (e.g. going all the way down and around obstacles) until it hits the target or a dead end. It does not consider edge count or cumulative path distance.
+   - *Answer*: DFS dives deep down whichever branch it explores first (e.g. going all the way down and around obstacles) until it hits the target or a dead end. It does not consider edge count or cumulative path distance. h
